@@ -5,6 +5,8 @@ defmodule NervesConfigEc2.Application do
 
   use Application
 
+  require Logger
+
   def start(_type, _args) do
 
     add_ssh_keys()
@@ -22,8 +24,8 @@ defmodule NervesConfigEc2.Application do
   end
 
   defp add_ssh_keys do
+    Logger.info("Configuring ssh from instance keypair")
     static = Application.get_env(:nerves_firmware_ssh, :authorized_keys, [])
-
     instance = case :httpc.request('http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key') do
       {:ok, {_, _, ""}} ->
         []
