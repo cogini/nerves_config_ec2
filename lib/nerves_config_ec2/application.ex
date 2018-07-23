@@ -25,8 +25,9 @@ defmodule NervesConfigEc2.Application do
 
   def add_ssh_keys do
     Logger.info("Configuring ssh from instance keypair")
-    static = Application.get_env(:nerves_firmware_ssh, :authorized_keys, [])
-    instance = case :httpc.request('http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key') do
+    static_keys = Application.get_env(:nerves_firmware_ssh, :authorized_keys, [])
+    Logger.debug("static ssh keys: #{inspect static_keys}")
+    instance_keys = case :httpc.request('http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key') do
       {:ok, {_, _, ""}} ->
         []
       {:ok, {_, _, key}} ->
@@ -34,7 +35,9 @@ defmodule NervesConfigEc2.Application do
       _ ->
         []
     end
-    Application.put_env(:nerves_firmware_ssh, :authorized_keys, static ++ instance, persistent: true)
+    all_keys = static_keys ++ instance_keys
+    Logger.debug("all ssh keys: #{inspect all_keys}")
+    Application.put_env(:nerves_firmware_ssh, :authorized_keys, all_keys, persistent: true)
   end
 
 end
