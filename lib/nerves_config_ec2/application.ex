@@ -25,6 +25,7 @@ defmodule NervesConfigEc2.Application do
 
   def add_ssh_keys do
     Logger.info("Configuring ssh from instance keypair")
+    # static_keys = get_env(:nerves_firmware_ssh, :authorized_keys)
     static_keys = Application.get_env(:nerves_firmware_ssh, :authorized_keys, [])
     Logger.debug("static ssh keys: #{inspect static_keys}")
     instance_keys = case :httpc.request('http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key') do
@@ -32,12 +33,26 @@ defmodule NervesConfigEc2.Application do
         []
       {:ok, {_, _, key}} ->
         [key]
-      _ ->
+      result ->
+        Logger.error("Error reading instance metadata: #{inspect result}")
         []
     end
-    all_keys = static_keys ++ instance_keys
-    Logger.debug("all ssh keys: #{inspect all_keys}")
-    Application.put_env(:nerves_firmware_ssh, :authorized_keys, all_keys, persistent: true)
+    Logger.debug("instance ssh keys: #{inspect instance_keys}")
+    # all_keys = static_keys ++ instance_keys
+    # Logger.debug("all ssh keys: #{inspect all_keys}")
+    # if length(all_keys) > 0 do
+    #   Application.put_env(:nerves_firmware_ssh, :authorized_keys, all_keys, persistent: true)
+    # end
   end
+
+  # defp get_env(app, key) do
+  #   get_env(app, key, Application.fetch_env(app, key))
+  # end
+  # defp get_env(app, key, :error) do
+  #   Logger.debug("sleeping")
+  #   :timer.sleep(100)
+  #   get_env(app, key, Application.fetch_env(app, key))
+  # end
+  # defp get_env(_app, _key, value), do: value
 
 end
